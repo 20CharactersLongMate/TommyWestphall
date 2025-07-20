@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tommy Westphall Universe with Brand Connections</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c1027, #1d2c4d, #2a3c6c);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 126, 95, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(254, 180, 123, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 40% 80%, rgba(33, 150, 243, 0.1) 0%, transparent 40%);
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 20px;
+            background: rgba(10, 15, 30, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 150, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b, #4CAF50, #2196F3, #9C27B0, #888888);
+        }
+        
+        h1 {
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(255, 126, 95, 0.4);
+            position: relative;
+            animation: titleGlow 3s infinite alternate;
+        }
+        
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 10px rgba(255, 126, 95, 0.4); }
+            100% { text-shadow: 0 0 25px rgba(255, 126, 95, 0.7); }
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 20px;
+            color: #c0d6ff;
+            line-height: 1.6;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            background: rgba(30, 40, 70, 0.5);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .legend-item:hover {
+            transform: translateY(-3px);
+            background: rgba(40, 50, 90, 0.6);
+        }
+        
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255,255,255,0.3);
+        }
+        
+        .content {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .graph-container {
+            flex: 3;
+            background: rgba(10, 15, 30, 0.85);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 150, 255, 0.15);
+            height: 75vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #network {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            cursor: grab;
+        }
+        
+        #network.dragging {
+            cursor: grabbing;
+        }
+        
+        .info-panel {
+            flex: 1;
+            background: rgba(10, 15, 30, 0.85);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 150, 255, 0.15);
+            max-height: 75vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* Styled scrollbar */
+        .info-panel::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .info-panel::-webkit-scrollbar-track {
+            background: rgba(20, 30, 60, 0.5);
+            border-radius: 10px;
+        }
+        
+        .info-panel::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, #ff7e5f, #feb47b);
+            border-radius: 10px;
+        }
+        
+        .info-panel::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(to bottom, #ff8e6f, #ffc49b);
+        }
+        
+        .search-section {
+            background: rgba(20, 30, 60, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(100, 150, 255, 0.15);
+        }
+        
+        .search-section h2 {
+            color: #ff7e5f;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dual-search {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .search-group {
+            position: relative;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ff7e5f;
+            font-size: 1.1rem;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 45px;
+            border-radius: 30px;
+            border: none;
+            background: rgba(30, 40, 80, 0.8);
+            color: white;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 126, 95, 0.5);
+            background: rgba(35, 45, 85, 0.9);
+        }
+        
+        .find-path-btn {
+            padding: 12px;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 126, 95, 0.3);
+            margin-top: 10px;
+            font-size: 1rem;
+        }
+        
+        .find-path-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 126, 95, 0.5);
+        }
+        
+        .show-details {
+            background: rgba(20, 30, 60, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(100, 150, 255, 0.15);
+        }
+        
+        .show-title {
+            font-size: 1.8rem;
+            color: #feb47b;
+            margin-bottom: 10px;
+        }
+        
+        .show-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #a0c0ff;
+            flex-wrap: wrap;
+        }
+        
+        .connections {
+            margin-top: 20px;
+        }
+        
+        .connections h3 {
+            color: #ff7e5f;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .connection-item {
+            padding: 12px 15px;
+            background: rgba(30, 40, 70, 0.7);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 3px solid #ff7e5f;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .connection-item.brand-connection {
+            border-left: 3px solid #888;
+        }
+        
+        .connection-item:hover {
+            background: rgba(50, 65, 110, 0.9);
+            transform: translateX(5px);
+        }
+        
+        .connection-year {
+            color: #ffb47b;
+            font-size: 0.9rem;
+            background: rgba(0,0,0,0.2);
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+        
+        .connection-via {
+            font-style: italic;
+            color: #bbb;
+            font-size: 0.9rem;
+            margin-left: 5px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .stat-card {
+            background: rgba(20, 30, 60, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(100, 150, 255, 0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(25, 35, 70, 0.8);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #ff7e5f;
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(255, 126, 95, 0.5);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #a0c0ff;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 126, 95, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 126, 95, 0.5);
+            background: linear-gradient(to right, #ff8e6f, #ffc49b);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .zoom-controls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(20, 30, 60, 0.8);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .zoom-btn:hover {
+            background: rgba(30, 40, 80, 0.9);
+            transform: scale(1.1);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            background: rgba(10, 15, 30, 0.85);
+            border-radius: 15px;
+            color: #a0c0ff;
+            font-size: 0.9rem;
+            border: 1px solid rgba(100, 150, 255, 0.15);
+        }
+        
+        .highlight {
+            color: #ff7e5f;
+            font-weight: bold;
+        }
+        
+        .path-info {
+            background: rgba(30, 40, 70, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #ff7e5f;
+            display: none;
+        }
+        
+        .path-title {
+            color: #feb47b;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .path-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .path-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .path-arrow {
+            color: #ff7e5f;
+            font-size: 1.2rem;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(20, 25, 45, 0.95);
+            border: 1px solid rgba(100, 150, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            pointer-events: none;
+            font-size: 14px;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            max-width: 300px;
+        }
+        
+        .tooltip-title {
+            color: #feb47b;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+        
+        .suggestions-list {
+            position: absolute;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(30, 40, 80, 0.95);
+            border-radius: 10px;
+            margin-top: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+        }
+        
+        /* Styled scrollbar for suggestions */
+        .suggestions-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .suggestions-list::-webkit-scrollbar-track {
+            background: rgba(20, 25, 45, 0.5);
+            border-radius: 10px;
+        }
+        
+        .suggestions-list::-webkit-scrollbar-thumb {
+            background: #ff7e5f;
+            border-radius: 10px;
+        }
+        
+        .suggestion-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .suggestion-item:hover {
+            background: rgba(50, 65, 110, 0.9);
+        }
+        
+        .recent-searches {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(30, 40, 70, 0.5);
+            border-radius: 10px;
+        }
+        
+        .recent-title {
+            color: #ff7e5f;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .recent-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .recent-tag {
+            padding: 5px 10px;
+            background: rgba(50, 65, 110, 0.7);
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .recent-tag:hover {
+            background: rgba(70, 85, 130, 0.9);
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 1100px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .graph-container, .info-panel {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+        
+        /* Animation for path lines */
+        .path-line {
+            stroke: #ff7e5f !important;
+            stroke-width: 3px !important;
+            stroke-dasharray: 10;
+            animation: dash 1s linear infinite;
+        }
+        
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 20;
+            }
+        }
+        
+        .path-node {
+            stroke: white !important;
+            stroke-width: 3px !important;
+            filter: url(#glow);
+            animation: pulse 1.5s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { r: 20; }
+            to { r: 24; }
+        }
+        
+        .graph-title {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #feb47b;
+            font-size: 1.2rem;
+            z-index: 10;
+            background: rgba(10, 15, 30, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+        }
+        
+        .brand-node {
+            stroke-dasharray: 5,5;
+            stroke-width: 2;
+        }
+        
+        .brand-link {
+            stroke-dasharray: 5,5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-snowflake"></i> Tommy Westphall Universe</h1>
+            <p class="subtitle">Visualizing the interconnected TV universe where thousands of shows exist within the imagination of Tommy Westphall from "St. Elsewhere"</p>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ff7e5f;"></div>
+                    <span>St. Elsewhere (Core)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #4CAF50;"></div>
+                    <span>Medical Shows</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #2196F3;"></div>
+                    <span>Police/Crime Shows</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #9C27B0;"></div>
+                    <span>Sci-Fi/Fantasy</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FFC107;"></div>
+                    <span>Comedies</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #888;"></div>
+                    <span>Fictional Brands</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="controls">
+            <button class="btn" id="reset-btn"><i class="fas fa-sync-alt"></i> Reset View</button>
+            <button class="btn" id="center-btn"><i class="fas fa-snowflake"></i> Center on St. Elsewhere</button>
+            <button class="btn" id="show-all-btn"><i class="fas fa-expand"></i> Show All Connections</button>
+            <button class="btn" id="about-btn"><i class="fas fa-info-circle"></i> About Universe</button>
+        </div>
+        
+        <div class="content">
+            <div class="graph-container">
+                <div class="graph-title">Drag to pan • Scroll to zoom</div>
+                <div id="network"></div>
+                <div class="zoom-controls">
+                    <div class="zoom-btn" id="zoom-in"><i class="fas fa-plus"></i></div>
+                    <div class="zoom-btn" id="zoom-out"><i class="fas fa-minus"></i></div>
+                    <div class="zoom-btn" id="reset-zoom"><i class="fas fa-expand"></i></div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="search-section">
+                    <h2><i class="fas fa-search"></i> Find Connection Path</h2>
+                    <div class="dual-search">
+                        <div class="search-group">
+                            <i class="fas fa-tv search-icon"></i>
+                            <input type="text" id="start-show" class="search-input" placeholder="Start TV show...">
+                            <div id="start-suggestions" class="suggestions-list"></div>
+                        </div>
+                        <div class="search-group">
+                            <i class="fas fa-tv search-icon"></i>
+                            <input type="text" id="end-show" class="search-input" placeholder="End TV show...">
+                            <div id="end-suggestions" class="suggestions-list"></div>
+                        </div>
+                        <button id="find-path-btn" class="find-path-btn">
+                            <i class="fas fa-route"></i> Find Connection Path
+                        </button>
+                    </div>
+                    <div id="path-info" class="path-info">
+                        <div class="path-title">Connection Path:</div>
+                        <div class="path-steps" id="path-steps"></div>
+                    </div>
+                    
+                    <div class="recent-searches">
+                        <div class="recent-title"><i class="fas fa-history"></i> Recent Searches:</div>
+                        <div class="recent-items" id="recent-searches"></div>
+                    </div>
+                </div>
+                
+                <div id="details-container">
+                    <div class="show-details">
+                        <h2>About the Universe</h2>
+                        <p>The <span class="highlight">Tommy Westphall universe</span> is a fictional universe consisting of thousands of television series, all of which are connected through crossover episodes and shared characters.</p>
+                        <br>
+                        <p>According to the hypothesis, all these shows exist only in the imagination of <span class="highlight">Tommy Westphall</span>, an autistic child seen in the final episode of the medical drama <span class="highlight">St. Elsewhere</span>.</p>
+                        <br>
+                        <p>This visualization shows how various TV shows are interconnected through character crossovers and shared universes, including connections via fictional brands like Morley Cigarettes.</p>
+                    </div>
+                    
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="show-count">32</div>
+                            <div class="stat-label">TV Shows</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="connection-count">48</div>
+                            <div class="stat-label">Connections</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">1970</div>
+                            <div class="stat-label">Starting Year</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">1</div>
+                            <div class="stat-label">Imaginary Universe</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p><i class="fas fa-tv"></i> The Tommy Westphall Universe Hypothesis | Created for educational and entertainment purposes</p>
+            <p>Data based on known TV show crossovers and shared character appearances</p>
+        </footer>
+    </div>
+
+    <script>
+        // Enhanced TV show data with valid connections and brands
+        const tvShows = [
+            {id: 1, name: "St. Elsewhere", year: 1982, genre: "Medical Drama", connections: [2,3,4], color: "#ff7e5f", description: "The show that started it all. The final episode revealed that the entire series took place in the imagination of autistic child Tommy Westphall."},
+            {id: 2, name: "Homicide: Life on the Street", year: 1993, genre: "Police Drama", connections: [1,5,6,7], color: "#2196F3", description: "Characters from St. Elsewhere appeared in this show, connecting it to the Westphall universe."},
+            {id: 3, name: "Cheers", year: 1982, genre: "Sitcom", connections: [1,8,9], color: "#FFC107", description: "Frasier Crane appeared in both Cheers and St. Elsewhere, connecting these universes."},
+            {id: 4, name: "The White Shadow", year: 1978, genre: "Drama", connections: [1,10], color: "#4CAF50", description: "Characters crossed over with St. Elsewhere in a crossover episode."},
+            {id: 5, name: "Law & Order", year: 1990, genre: "Legal Drama", connections: [2,11,12,13], color: "#2196F3", description: "Connected through shared characters with Homicide: Life on the Street."},
+            {id: 6, name: "The X-Files", year: 1993, genre: "Sci-Fi", connections: [2,14,15], color: "#9C27B0", description: "Connected through a crossover with Homicide: Life on the Street."},
+            {id: 7, name: "The Wire", year: 2002, genre: "Crime Drama", connections: [2,16], color: "#2196F3", description: "Shared characters and setting with Homicide: Life on the Street."},
+            {id: 8, name: "Frasier", year: 1993, genre: "Sitcom", connections: [3,17,18], color: "#FFC107", description: "Spin-off from Cheers, connecting it to the Westphall universe."},
+            {id: 9, name: "Wings", year: 1990, genre: "Sitcom", connections: [3,19], color: "#FFC107", description: "Set in the same universe as Cheers, with crossover appearances."},
+            {id: 10, name: "The Bob Newhart Show", year: 1972, genre: "Sitcom", connections: [4,20], color: "#FFC107", description: "Connected through The White Shadow crossover."},
+            {id: 11, name: "Law & Order: SVU", year: 1999, genre: "Legal Drama", connections: [5,21], color: "#2196F3", description: "Spin-off of Law & Order, expanding the universe."},
+            {id: 12, name: "Chicago P.D.", year: 2014, genre: "Police Drama", connections: [5,23], color: "#2196F3", description: "Part of the Chicago franchise, connected through Law & Order crossovers."},
+            {id: 13, name: "Oz", year: 1997, genre: "Prison Drama", connections: [5,24], color: "#2196F3", description: "Shared universe with Law & Order."},
+            {id: 14, name: "The Lone Gunmen", year: 2001, genre: "Sci-Fi", connections: [6,22], color: "#9C27B0", description: "Spin-off from The X-Files."},
+            {id: 15, name: "Millennium", year: 1996, genre: "Crime/Horror", connections: [6,22], color: "#9C27B0", description: "Set in the same universe as The X-Files."},
+            {id: 16, name: "Treme", year: 2010, genre: "Drama", connections: [7], color: "#2196F3", description: "From the creators of The Wire, set in the same universe."},
+            {id: 17, name: "Caroline in the City", year: 1995, genre: "Sitcom", connections: [8,25], color: "#FFC107", description: "Characters crossed over with Frasier."},
+            {id: 18, name: "The Tortellis", year: 1987, genre: "Sitcom", connections: [3], color: "#FFC107", description: "Spin-off from Cheers."},
+            {id: 19, name: "The Simpsons", year: 1989, genre: "Animated Sitcom", connections: [6,9,26,27], color: "#FFC107", description: "Characters from Wings appeared in The Simpsons."},
+            {id: 20, name: "Newhart", year: 1982, genre: "Sitcom", connections: [10,28], color: "#FFC107", description: "Connected through The Bob Newhart Show."},
+            {id: 21, name: "Chicago Fire", year: 2012, genre: "Drama", connections: [11,12], color: "#2196F3", description: "Connected through Law & Order: SVU crossovers."},
+            {id: 22, name: "Star Trek: TNG", year: 1987, genre: "Sci-Fi", connections: [14,15], color: "#9C27B0", description: "Connected through crossover references and shared themes."},
+            {id: 23, name: "Chicago Med", year: 2015, genre: "Medical Drama", connections: [12,21], color: "#4CAF50", description: "Medical spin-off in the Chicago franchise."},
+            {id: 24, name: "Breaking Bad", year: 2008, genre: "Crime Drama", connections: [13,29], color: "#2196F3", description: "Connected through subtle references in Law & Order."},
+            {id: 25, name: "Friends", year: 1994, genre: "Sitcom", connections: [17], color: "#FFC107", description: "Mentioned in The Simpsons, connecting to the universe."},
+            {id: 26, name: "Futurama", year: 1999, genre: "Animated Sci-Fi", connections: [19], color: "#9C27B0", description: "Connected through The Simpsons crossover."},
+            {id: 27, name: "Family Guy", year: 1999, genre: "Animated Sitcom", connections: [19], color: "#FFC107", description: "Connected through The Simpsons crossover."},
+            {id: 28, name: "The Mary Tyler Moore Show", year: 1970, genre: "Sitcom", connections: [20], color: "#FFC107", description: "Connected through Newhart crossover."},
+            {id: 29, name: "Better Call Saul", year: 2015, genre: "Legal Drama", connections: [24], color: "#2196F3", description: "Spin-off of Breaking Bad."},
+            {id: 30, name: "The West Wing", year: 1999, genre: "Political Drama", connections: [3,5], color: "#2196F3", description: "Connected through shared references with other shows."},
+            {id: 31, name: "The Sopranos", year: 1999, genre: "Crime Drama", connections: [5], color: "#2196F3", description: "Connected through shared references and themes."},
+            {id: 32, name: "Mad Men", year: 2007, genre: "Drama", connections: [20], color: "#2196F3", description: "Connected through shared references and themes."},
+			{id: 33, name: "24", year: 2001, genre: "Drama", connections: [30], color: "#2196F3", description: "Connected through shared references and themes."},
+			{id: 34, name: "Beverly Hills, 90210", year: 1990, genre: "Drama", connections: [30], color: "#2196F3", description: "Connected through shared references and themes."},
+			{id: 35, name: "90210", year: 2008, genre: "Drama", connections: [34], color: "#2196F3", description: "Connected through shared references and themes."},
+			{id: 36, name: "Melrose Place", year: 1992, genre: "Drama", connections: [35], color: "#2196F3", description: "Connected through shared references and themes."},
+			{id: 37, name: "ALF", year: 1994, genre: "Sitcom", connections: [39], color: "#FFC107", description: "Connected through shared references and themes."},
+			{id: 38, name: "Happy Days", year: 1994, genre: "Sitcom", connections: [40], color: "#FFC107", description: "Connected through shared references and themes."},
+			{id: 39, name: "30 Rock", year: 1994, genre: "Sitcom", connections: [37], color: "#FFC107", description: "Connected through shared references and themes."},
+			{id: 40, name: "Perfect Strangers", year: 0, genre: "Sitcom", connections: [38], color: "#FFC107", description: "Connected through shared references and themes."},
+			{id: 41, name: "Family Matters", year: 0, genre: "Sitcom", connections: [40], color: "#FFC107", description: "Connected through shared references and themes."},
+			{id: 42, name: "Buffy the Vampire Slayer", year: 0, genre: "Sci-Fi", connections: [], color: "#9C27B0", description: "Connected through shared references and themes."},
+			{id: 43, name: "Legends of Tomorrow", year: 0, genre: "Sci-Fi", connections: [], color: "#9C27B0", description: "Connected through the Chicago Chronicle."},
+			{id: 44, name: "Supergirl", year: 0, genre: "Sci-Fi", connections: [43], color: "#9C27B0", description: "Kara Danvers, appeared in Legends of Tomorrow's 'Invasion!'."},
+			{id: 45, name: "The Flash", year: 2014, genre: "Sci-Fi", connections: [44], color: "#9C27B0", description: "Barry Allen from The Flash appeared in Supergirl's 'World's Finest'."},
+			{id: 46, name: "Batman (1966)", year: 1966, genre: "Sci-Fi", connections: [44], color: "#9C27B0", description: "Dick Grayson from Batman (designated Earth-66) appears in Supergirl."},
+			{id: 47, name: "Titans", year: 2018, genre: "Sci-Fi", connections: [44], color: "#9C27B0", description: "Hank Hall and Jason Todd appear in Supergirl 'Crisis on Infinite Earths: Part One'."},
+			{id: 48, name: "Birds of Prey", year: 2002, genre: "Sci-Fi", connections: [44], color: "#9C27B0", description: "Barbara Gordon and Helena Kyle from Birds of Prey appears in Supergirl (designated Earth-203)."},
+			{id: 49, name: "Batman (1989)", year: 1989, genre: "Sci-Fi", connections: [44], color: "#9C27B0", description: "Alexander Knox from the film Batman (1989) appears in Supergirl 'Crisis on Infinite Earths: Part One'."},
+			{id: 50, name: "Batwoman", year: 2019, genre: "Sci-Fi", connections: [44, 45], color: "#9C27B0", description: "Batwoman spun off of The Flash, Arrow, and Supergirl during the 3-night Elseworlds crossover event, which also featured The Flash (1990)."},
+			{id: 51, name: "Arrow", year: 2012, genre: "Sci-Fi", connections: [43, 45], color: "#9C27B0", description: "Connected through shared references and themes."},
+			{id: 52, name: "Powerless", year: 2017, genre: "Sci-Fi", connections: [51], color: "#9C27B0", description: "Van Wayne Industries appeared in Arrow 'Fadeout'"},
+			{id: 53, name: "Malcolm in the Middle", year: 2000, genre: "Sitcom", connections: [], color: "#FFC107", description: "Connected through shared references and themes."},
+			{id: 54, name: "Accidentally on Purpose", year: 2009, genre: "Sitcom", connections: [], color: "#FFC107", description: "Connected through Heisler Beer."},
+			{id: 55, name: "Anger Management", year: 2012, genre: "Sitcom", connections: [], color: "#FFC107", description: "Connected through Heisler Beer."},
+			{id: 56, name: "Blue Bloods", year: 2010, genre: "Drama", connections: [], color: "#4CAF50", description: "Connected through Heisler Beer."},
+			{id: 57, name: "The Mosquito Coast", year: 2021, genre: "Drama", connections: [56], color: "#4CAF50", description: "Agent Don Voorhees from Blue Bloods appears in 'Calaca', 'Elvis, Jesus, and Coca-Cola', 'Foxes and Coyotes', and 'Light Out'."},
+			{id: 58, name: "Blue Mountain State", year: 2010, genre: "Sitcom", connections: [], color: "#FFC107", description: "Connected through Heisler Beer."},
+			{id: 59, name: "Blue Mountain State: The Rise of Thadland", year: 2016, genre: "Sitcom", connections: [58], color: "#FFC107", description: "Spin-off of Blue Mountain State (2010)."},
+			{id: 60, name: "Awkward", year: 2011, genre: "Drama", connections: [], color: "#4CAF50", description: "Agent Don Voorhees from Blue Bloods appears in 'Calaca', 'Elvis, Jesus, and Coca-Cola', 'Foxes and Coyotes', and 'Light Out'."},
+			{id: 61, name: "The Finder", year: 2012, genre: "Drama", connections: [], color: "#4CAF50", description: "Connected through shared references and themes."},
+			{id: 62, name: "Bones", year: 2005, genre: "Drama", connections: [61], color: "#4CAF50", description: "Connected through shared references and themes."},
+			{id: 63, name: "Sleepy Hollow", year: 2013, genre: "Drama", connections: [], color: "#4CAF50", description: "Bones 'The Resurrection in the Remains' concluded in 'Dead Men Tell No Tales'."},
+			{id: 64, name: "Casino (1995)", year: 1995, genre: "Drama", connections: [62], color: "#4CAF50", description: "In bones 'The Woman in the Sand', the team investigate a tip-off from a prostitute at the Tangiers Hotel, the setting of the 1995 film, Casino."},
+			{id: 65, name: "Rosewood", year: 2015, genre: "Drama", connections: [62], color: "#4CAF50", description: "Daisy Wick from Bones appeared in the episode 'Half-Life and Havana Nights'."},
+			{id: 66, name: "Brooklyn Nine-Nine", year: 2013, genre: "Sitcom", connections: [30], color: "#FFC107", description: "Connected through Heisler Beer."},
+			{id: 67, name: "3rd Rock from the Sun", year: 1996, genre: "Sitcom", connections: [], color: "#FFC107", description: "Connected through Heisler Beer."},
+			{id: 68, name: "Do The Right Thing", year: 1989, genre: "Comedy Movie", connections: [66], color: "#FFC107", description: "Do the Right Thing is an American comedy-drama film starring, directed, and produced by Spike Lee that premiered in 1989."},
+			{id: 69, name: "Inside Man", year: 2006, genre: "Heist Thriller", connections: [68], color: "#FFC107", description: "Inside Man is an American heist thriller theatrical film directed by Spike Lee released in 2006."},
+			{id: 70, name: "Dog Day Afternoon", year: 1975, genre: "Drama", connections: [69], color: "#4CAF50", description: "Dog Day Afternoon is an American biographical crime drama theatrical film directed by Sidney Lumet released in 1975. Miriam Douglas and the pizza delivery man appear in Inside Man. The First Brooklyn Savings Bank appeared in The Blacklist 'The Third Estate'."},
+			{id: 71, name: "The Blacklist", year: 2013, genre: "Drama", connections: [70], color: "#4CAF50", description: "The First Brooklyn Savings Bank from Dog Day Afternoon appeared in 'The Third Estate'."},
+			{id: 72, name: "Forrest Gump", year: 1994, genre: "Comedy-Drama", connections: [71], color: "#FFC107", description: "The First Brooklyn Savings Bank from Dog Day Afternoon appeared in 'The Third Estate'."},
+			{id: 73, name: "Supernatural", year: 2006, genre: "Sci-Fi", connections: [63], color: "#9C27B0", description: "Supernatural was an American science fiction series created by Eric Kripke."},
+			{id: 74, name: "Scrubs", year: 2001, genre: "Sitcom", connections: [], color: "#FFC107", description: "Scrubs was an American comedy-drama television series that ran on NBC and ABC from October 2, 2001 to March 17, 2010 for 9 seasons created by Bill Lawrence."},
+			{id: 75, name: "Men in Black", year: 1997, genre: "Sci-Fi", connections: [67], color: "#9C27B0", description: "Men in Black is an American science fiction action comedy film directed by Barry Sonnenfeld released in 1997. Some aliens in this film also speak Huttese, a fictional language spoken by Jabba the Hutt in the Star Wars franchise."},
+			{id: 76, name: "Return of the Jedi", year: 1983, genre: "Sci-Fi", connections: [75], color: "#9C27B0", description: ""},
+			{id: 77, name: "Harry Potter and the Chamber of Secrets", year: 2002, genre: "Sci-Fi", connections: [73], color: "#9C27B0", description: ""},
+			{id: 78, name: "Burn Notice", year: 2007, genre: "Spy Series", connections: [], color: "#4CAF50", description: ""},
+			{id: 79, name: "Cloak & Dagger", year: 2013, genre: "Sci-Fi/Fantasy", connections: [], color: "", description: ""},
+			{id: 80, name: "Colony", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 81, name: "Criminal Minds", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 82, name: "CSI: Crime Scene Investigation", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 83, name: "CSI: Miami", year: 0, genre: "", connections: [82], color: "", description: ""},
+			{id: 84, name: "Dark Blue", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 85, name: "Desperate Housewives", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 86, name: "Dollhouse", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 87, name: "Dynasty (2017)", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 88, name: "Eli Stone", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 89, name: "Ghost Whisperer", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 90, name: "Gilmore Girls", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 91, name: "Glee", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 92, name: "Goliath", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 93, name: "Good Girls", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 94, name: "Happy Endings", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 95, name: "Hart of Dixie", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 96, name: "Heroes", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 97, name: "How I Met Your Mother", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 98, name: "How to Get Away with Murder", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 99, name: "It’s Always Sunny in Philadelphia", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 100, name: "K-Ville", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 101, name: "The League", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 102, name: "Legit", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 103, name: "Lie to Me", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 104, name: "Longmire", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 105, name: "Lucifer", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 106, name: "Mad Love", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 107, name: "The Mentalist", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 108, name: "Mr. Mercedes", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 109, name: "My Name is Earl", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 110, name: "NCIS", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 111, name: "New Girl", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 112, name: "Parks and Recreation", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 113, name: "The Pretender", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 114, name: "Pretty Little Liars", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 115, name: "Prison Break", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 116, name: "Privileged", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 117, name: "Raising Hope", year: 0, genre: "", connections: [109], color: "", description: ""},
+			{id: 118, name: "Reno 911!", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 119, name: "The Riches", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 120, name: "Roseanne", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 121, name: "Russian Doll", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 122, name: "Six", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 123, name: "Star Trek: Enterprise", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 124, name: "Stranger Things", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 125, name: "Switched at Birth", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 126, name: "Terminator: The Sarah Connor Chronicles", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 127, name: "This is Us", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 128, name: "Trust Me", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 129, name: "Ugly Betty", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 130, name: "United States of Tara", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 131, name: "The Vampire Diaries", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 132, name: "Veronica Mars", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 133, name: "Weeds", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 134, name: "White Collar", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 135, name: "Workaholics", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 136, name: "Bosch", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 137, name: "Crossing Jordan", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 138, name: "General Hospital", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 139, name: "Hidden Palms", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 140, name: "Homeland", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 141, name: "Hung", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 142, name: "Journeyman", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 143, name: "Moonlight", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 144, name: "Southland", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 145, name: "Touch", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 146, name: "Weeds", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 147, name: "Without a Trace", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 148, name: "Dexter", year: 0, genre: "", connections: [42], color: "", description: ""},
+			{id: 149, name: "The Office (US)", year: 0, genre: "", connections: [148], color: "", description: ""},
+			{id: 150, name: "American Horror Story", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 151, name: "The Americans", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 152, name: "Bagboy", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 153, name: "Californication", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 154, name: "Cold Case", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 155, name: "CSI: NY", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 156, name: "Curb Your Enthusiasm", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 157, name: "The Dick Van Dyke Show", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 158, name: "ER", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 159, name: "Everybody Hates Chris", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 160, name: "200 Cigarettes", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 161, name: "Cyberpunk 2077", year: 0, genre: "Video Game", connections: [], color: "", description: ""},
+			{id: 162, name: "S. Darko", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 163, name: "Donnie Darko", year: 0, genre: "", connections: [162], color: "", description: ""},
+			{id: 164, name: "Clerks", year: 1994, genre: "", connections: [45, 109], color: "", description: ""},
+			{id: 165, name: "The Blair Witch Project", year: 0, genre: "", connections: [164], color: "", description: ""},
+			{id: 166, name: "Drawing Flies", year: 0, genre: "", connections: [164], color: "", description: ""},
+			{id: 167, name: "Scream 3", year: 0, genre: "", connections: [164, 169, 170, 171, 172], color: "", description: ""},
+			{id: 168, name: "Madness in the Method", year: 0, genre: "", connections: [164], color: "", description: ""},
+			{id: 169, name: "Scream 2", year: 0, genre: "", connections: [167, 170, 171, 172], color: "", description: ""},
+			{id: 170, name: "Scream 4", year: 0, genre: "", connections: [167, 169, 171, 172], color: "", description: ""},
+			{id: 171, name: "Scream (2022)", year: 0, genre: "", connections: [167, 169, 170, 172], color: "", description: ""},
+			{id: 172, name: "Scream (1996)", year: 0, genre: "", connections: [167, 169, 170, 171], color: "", description: ""},
+			{id: 173, name: "iCarly", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 174, name: "Drake and Josh", year: 0, genre: "", connections: [173], color: "", description: ""},
+			{id: 175, name: "Victorious", year: 0, genre: "", connections: [173], color: "", description: ""},
+			{id: 176, name: "Zoey 101", year: 0, genre: "", connections: [173], color: "", description: ""},
+			{id: 177, name: "Sam and Cat", year: 0, genre: "", connections: [173], color: "", description: ""},
+			{id: 178, name: "Mad About You", year: 0, genre: "", connections: [25], color: "", description: ""},
+			{id: 179, name: "Seinfeld", year: 0, genre: "", connections: [26], color: "", description: ""},
+			{id: 180, name: "Wizards of Waverly Place", year: 0, genre: "", connections: [181, 182], color: "", description: ""},
+			{id: 181, name: "The Suite Life on Deck", year: 0, genre: "", connections: [180, 182], color: "", description: ""},
+			{id: 182, name: "Hannah Montana", year: 0, genre: "", connections: [180, 181], color: "", description: ""},
+			{id: 183, name: "2 Broke Girls", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 184, name: "A.P. Bio", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 185, name: "American Crime Story", year: 0, genre: "", connections: [150], color: "", description: ""},
+			{id: 186, name: "Arrested Development", year: 0, genre: "", connections: [2, 11], color: "", description: ""},
+			{id: 187, name: "Captain America: Civil War", year: 0, genre: "", connections: [186], color: "", description: "The Bluth family stair car appeared in the film Captain America: Civil War."},
+			{id: 188, name: "Avengers: Infinity War", year: 0, genre: "", connections: [186], color: "", description: ""},
+			{id: 189, name: "Castle", year: 0, genre: "", connections: [31], color: "", description: ""},
+			{id: 183, name: "2 Broke Girls", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 183, name: "2 Broke Girls", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 183, name: "2 Broke Girls", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 183, name: "2 Broke Girls", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 183, name: "2 Broke Girls", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 183, name: "2 Broke Girls", year: 0, genre: "", connections: [], color: "", description: ""},
+			{id: 183, name: "2 Broke Girls", year: 0, genre: "", connections: [], color: "", description: ""},
+		];	
+
+        // Define fictional brands
+        const brands = [
+            {id: 1000, name: "Morley Cigarettes", type: "brand", color: "#888", description: "A fictional brand of cigarettes that appears in numerous TV shows and films, connecting many universes."},
+            {id: 1001, name: "Oceanic Airlines", type: "brand", color: "#888", description: "A fictional airline that has appeared in many TV shows and films, creating connections between different universes."},
+            {id: 1002, name: "Duff Beer", type: "brand", color: "#888", description: "A fictional beer brand that appears primarily in The Simpsons but has been referenced in other shows."},
+			{id: 1003, name: "Cradock Marine", type: "brand", color: "#888", description: ""},
+			{id: 1004, name: "The National Inquisitor", type: "brand", color: "#888", description: ""},
+			{id: 1005, name: "The Chicago Chronicle", type: "brand", color: "#888", description: ""},
+			{id: 1006, name: "Blue Sky Meth", type: "brand", color: "#888", description: "From Breaking Bad"},
+			{id: 1007, name: "Heisler", type: "brand", color: "#888", description: "Heisler is a fictional alcohol company that makes many appearances in film and television. It makes beer and ale."},
+			{id: 1008, name: "Let's Potato Chips", type: "brand", color: "#888", description: "Let's Potato Chips is a fictional brand of potato chips and occasionally other snack foods that appears in many television productions."},
+			{id: 1009, name: "Playpen Magazine", type: "brand", color: "#888", description: "Playpen Magazine is a fictional adult content magazine that has appeared in numerous films and television series since the 1960s."},
+			{id: 1100, name: "Apollo Bars", type: "brand", color: "#888", description: "Apollo bars are a fictional candy bar that first appeared in the TV series Lost as a prop"},
+			{id: 1101, name: "Finder-Spyder", type: "brand", color: "#888", description: "Apollo bars are a fictional candy bar that first appeared in the TV series Lost as a prop"},
+        ];
+
+        // Combine shows and brands into a single nodes array
+        const allNodes = [...tvShows, ...brands];
+
+        // Create validated connections
+        const connections = [];
+        const existingIds = new Set(allNodes.map(node => node.id));
+        
+        // Direct show-to-show connections
+        tvShows.forEach(show => {
+            if (show.connections) {
+                show.connections.forEach(targetId => {
+                    if (existingIds.has(targetId)) {
+                        connections.push({
+                            source: show.id,
+                            target: targetId,
+                            value: Math.floor(Math.random() * 3) + 1,
+                            type: 'direct'
+                        });
+                    }
+                });
+            }
+        });
+
+        // Brand connections
+        connections.push(
+            // Morley Cigarettes connections
+            {source: 5, target: 1000, value: 2, type: 'brand'},   // Law & Order
+			{source: 6, target: 1000, value: 2, type: 'brand'},   // The X-Files
+			{source: 8, target: 1000, value: 2, type: 'brand'},   // Frasier
+            {source: 11, target: 1000, value: 2, type: 'brand'},  // Law & Order: SVU
+            {source: 24, target: 1000, value: 2, type: 'brand'},  // Breaking Bad
+			{source: 25, target: 1000, value: 2, type: 'brand'},  // Friends
+            {source: 31, target: 1000, value: 2, type: 'brand'},  // The Sopranos
+			{source: 34, target: 1000, value: 2, type: 'brand'},  // Beverly Hills, 90210
+			{source: 42, target: 1000, value: 2, type: 'brand'},  // Buffy the Vampire Slayer
+			{source: 53, target: 1000, value: 2, type: 'brand'},  // Malcolm in the Middle
+			{source: 78, target: 1000, value: 2, type: 'brand'},  // Burn Notice
+			{source: 81, target: 1000, value: 2, type: 'brand'},  // Criminal Minds
+			{source: 96, target: 1000, value: 2, type: 'brand'},  // Heroes
+			{source: 136, target: 1000, value: 2, type: 'brand'},  // Bosch
+			{source: 150, target: 1000, value: 2, type: 'brand'},  // American Horror Story
+			{source: 153, target: 1000, value: 2, type: 'brand'},  // Californication
+			{source: 154, target: 1000, value: 2, type: 'brand'},  // Cold Case
+			{source: 155, target: 1000, value: 2, type: 'brand'},  // CSI: NY
+			{source: 156, target: 1000, value: 2, type: 'brand'},  // Curb Your Enthusiasm
+			{source: 157, target: 1000, value: 2, type: 'brand'},  // The Dick Van Dyke Show
+			{source: 158, target: 1000, value: 2, type: 'brand'},  // ER
+			{source: 159, target: 1000, value: 2, type: 'brand'},  // Everybody Hates Chris
+			{source: 160, target: 1000, value: 2, type: 'brand'},  // 200 Cigarettes
+			{source: 161, target: 1000, value: 2, type: 'brand'},  // Cyberpunk 2077
+			{source: 162, target: 1000, value: 2, type: 'brand'},  // Cyberpunk 2077
+            
+            // Oceanic Airlines connections
+            {source: 6, target: 1001, value: 2, type: 'brand'},   // The X-Files
+            {source: 22, target: 1001, value: 2, type: 'brand'},  // Star Trek: TNG
+            {source: 19, target: 1001, value: 2, type: 'brand'},  // The Simpsons
+            
+            // Duff Beer connections
+            {source: 19, target: 1002, value: 2, type: 'brand'},  // The Simpsons
+            {source: 26, target: 1002, value: 2, type: 'brand'},  // Futurama
+            {source: 27, target: 1002, value: 2, type: 'brand'},   // Family Guy
+			
+			// Cradock Marine connections
+            {source: 6, target: 1003, value: 2, type: 'brand'},  // The Simpsons
+            {source: 34, target: 1003, value: 2, type: 'brand'},  // Futurama
+			
+			// The National Inquisitor connections
+			{source: 19, target: 1004, value: 2, type: 'brand'},  // The Simpsons
+            {source: 36, target: 1004, value: 2, type: 'brand'},  // Melrose Place
+			{source: 37, target: 1004, value: 2, type: 'brand'},  // ALF
+			
+			// The Chicago Chronicle connections
+			{source: 40, target: 1005, value: 2, type: 'brand'},  // Perfect Strangers
+			{source: 41, target: 1005, value: 2, type: 'brand'},  // Family Matters
+			{source: 43, target: 1005, value: 2, type: 'brand'},  // Legends of Tomorrow
+			
+			// Blue Sky Meth connections
+			{source: 24, target: 1006, value: 2, type: 'brand'},  // Breaking Bad
+			{source: 51, target: 1006, value: 2, type: 'brand'},  // Arrow
+			
+			// Heisler connections
+			{source: 12, target: 1007, value: 2, type: 'brand'},  // Chicago P.D.
+			{source: 53, target: 1007, value: 2, type: 'brand'},  // Malcolm in the Middle
+			{source: 54, target: 1007, value: 2, type: 'brand'},  // Accidentally on Purpose
+			{source: 55, target: 1007, value: 2, type: 'brand'},  // Anger Management
+			{source: 56, target: 1007, value: 2, type: 'brand'},  // Blue Bloods
+			{source: 58, target: 1007, value: 2, type: 'brand'},  // Blue Mountain State
+			{source: 61, target: 1007, value: 2, type: 'brand'},  // The Finder
+			{source: 78, target: 1007, value: 2, type: 'brand'},  // Burn Notice
+			{source: 79, target: 1007, value: 2, type: 'brand'},  // Cloak & Dagger
+			{source: 80, target: 1007, value: 2, type: 'brand'},  // Colony
+			{source: 81, target: 1007, value: 2, type: 'brand'},  // Criminal Minds
+			{source: 82, target: 1007, value: 2, type: 'brand'},  // CSI: Crime Scene Investigation
+			{source: 83, target: 1007, value: 2, type: 'brand'},  // CSI: Miami
+			{source: 84, target: 1007, value: 2, type: 'brand'},  // Dark Blue
+			{source: 85, target: 1007, value: 2, type: 'brand'},  // Desperate Housewives
+			{source: 86, target: 1007, value: 2, type: 'brand'},  // Dollhouse
+			{source: 87, target: 1007, value: 2, type: 'brand'},  // Dynasty (2017)
+			{source: 88, target: 1007, value: 2, type: 'brand'},  // Eli Stone
+			{source: 89, target: 1007, value: 2, type: 'brand'},  // Ghost Whisperer
+			{source: 90, target: 1007, value: 2, type: 'brand'},  // Gilmore Girls
+			{source: 91, target: 1007, value: 2, type: 'brand'},  // Glee
+			{source: 92, target: 1007, value: 2, type: 'brand'},  // Goliath
+			{source: 93, target: 1007, value: 2, type: 'brand'},  // Good Girls
+			{source: 94, target: 1007, value: 2, type: 'brand'},  // The Good Place
+			{source: 95, target: 1007, value: 2, type: 'brand'},  // Happy Endings
+			{source: 96, target: 1007, value: 2, type: 'brand'},  // Hart of Dixie
+			{source: 97, target: 1007, value: 2, type: 'brand'},  // Heroes
+			{source: 98, target: 1007, value: 2, type: 'brand'},  // How I Met Your Mother
+			{source: 99, target: 1007, value: 2, type: 'brand'},  // How to Get Away with Murder
+			{source: 100, target: 1007, value: 2, type: 'brand'},  // It's Always Sunny in Philadelphia
+			{source: 101, target: 1007, value: 2, type: 'brand'},  // K-Ville
+			{source: 102, target: 1007, value: 2, type: 'brand'},  // The League
+			{source: 103, target: 1007, value: 2, type: 'brand'},  // Legit
+			{source: 104, target: 1007, value: 2, type: 'brand'},  // Lie to Me
+			{source: 105, target: 1007, value: 2, type: 'brand'},  // Longmire
+			{source: 106, target: 1007, value: 2, type: 'brand'},  // Lucifer
+			{source: 107, target: 1007, value: 2, type: 'brand'},  // Mad Love
+			{source: 108, target: 1007, value: 2, type: 'brand'},  // The Mentalist
+			{source: 109, target: 1007, value: 2, type: 'brand'},  // Mr. Mercedes
+			{source: 110, target: 1007, value: 2, type: 'brand'},  // My Name is Earl
+			{source: 111, target: 1007, value: 2, type: 'brand'},  // NCIS
+			{source: 112, target: 1007, value: 2, type: 'brand'},  // New Girl
+			{source: 113, target: 1007, value: 2, type: 'brand'},  // Parks and Recreation
+			{source: 114, target: 1007, value: 2, type: 'brand'},  // The Pretender
+			{source: 115, target: 1007, value: 2, type: 'brand'},  // Pretty Little Liars
+			{source: 116, target: 1007, value: 2, type: 'brand'},  // Prison Break
+			{source: 117, target: 1007, value: 2, type: 'brand'},  // Privileged
+			{source: 118, target: 1007, value: 2, type: 'brand'},  // Raising Hope
+			{source: 119, target: 1007, value: 2, type: 'brand'},  // Reno 911!
+			{source: 120, target: 1007, value: 2, type: 'brand'},  // The Riches
+			{source: 121, target: 1007, value: 2, type: 'brand'},  // Roseanne
+			{source: 122, target: 1007, value: 2, type: 'brand'},  // Russian Doll
+			{source: 123, target: 1007, value: 2, type: 'brand'},  // Six
+			{source: 124, target: 1007, value: 2, type: 'brand'},  // Star Trek: Enterprise
+			{source: 125, target: 1007, value: 2, type: 'brand'},  // 
+			{source: 126, target: 1007, value: 2, type: 'brand'},  // 
+			{source: 127, target: 1007, value: 2, type: 'brand'},  // 
+			{source: 128, target: 1007, value: 2, type: 'brand'},  // 
+			{source: 129, target: 1007, value: 2, type: 'brand'},  // 
+			{source: 130, target: 1007, value: 2, type: 'brand'},  // 
+			{source: 131, target: 1007, value: 2, type: 'brand'},  // 
+			{source: 132, target: 1007, value: 2, type: 'brand'},  // 
+			{source: 133, target: 1007, value: 2, type: 'brand'},  // 
+			{source: 134, target: 1007, value: 2, type: 'brand'},  // 
+			{source: 135, target: 1007, value: 2, type: 'brand'},  // 
+			
+			
+			// Let's Potato Chips connections
+			{source: 45, target: 1008, value: 2, type: 'brand'},  // The Flash
+			{source: 60, target: 1008, value: 2, type: 'brand'},  // Awkward
+			{source: 73, target: 1008, value: 2, type: 'brand'},  // Supernatural
+			{source: 80, target: 1008, value: 2, type: 'brand'},  // Colony
+			{source: 173, target: 1008, value: 2, type: 'brand'}, // iCarly
+			{source: 180, target: 1008, value: 2, type: 'brand'}, // Wizards of Waverly Place
+			{source: 183, target: 1008, value: 2, type: 'brand'}, // 2 Broke Girls
+			{source: 184, target: 1008, value: 2, type: 'brand'}, // A.P. Bio
+			{source: 185, target: 1008, value: 2, type: 'brand'}, // American Crime Story
+			{source: 186, target: 1008, value: 2, type: 'brand'}, // Arrested Development
+			{source: 189, target: 1008, value: 2, type: 'brand'}, // Castle
+			
+			// Playpen Magazine connections
+			{source: 25, target: 1009, value: 2, type: 'brand'},  // Friends
+			{source: 62, target: 1009, value: 2, type: 'brand'},  // Bones
+			{source: 67, target: 1009, value: 2, type: 'brand'},  // Third Rock from the Sun
+			
+			// Apollo Bars connections
+			{source: 66, target: 1100, value: 2, type: 'brand'},  // Brooklyn Nine-Nine
+			{source: 74, target: 1100, value: 2, type: 'brand'},  // Lost
+			
+			// Finder-Spyder connections
+			{source: 6, target: 1101, value: 2, type: 'brand'},  // The X-Files
+			{source: 24, target: 1101, value: 2, type: 'brand'},  // Breaking Bad
+			{source: 61, target: 1101, value: 2, type: 'brand'},  // The Finder
+			{source: 81, target: 1101, value: 2, type: 'brand'},  // Criminal Minds
+			{source: 96, target: 1101, value: 2, type: 'brand'},  // Heroes
+			{source: 136, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 137, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 138, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 139, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 140, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 141, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 142, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 143, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 144, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 145, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 146, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 147, target: 1101, value: 2, type: 'brand'},  // Prison Break
+			{source: 148, target: 1101, value: 2, type: 'brand'},  // Prison Break
+        );
+
+        // Update stats
+        document.getElementById('show-count').textContent = tvShows.length;
+        document.getElementById('connection-count').textContent = connections.length;
+
+        // Set up the SVG container
+        const width = document.getElementById('network').clientWidth;
+        const height = document.getElementById('network').clientHeight;
+
+        // Create SVG container
+        const svg = d3.select("#network")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+            
+        // Create a group for zoomable content
+        const zoomLayer = svg.append("g");
+            
+        // Add glow filter for path nodes
+        const defs = svg.append("defs");
+        const filter = defs.append("filter")
+            .attr("id", "glow")
+            .attr("x", "-50%")
+            .attr("y", "-50%")
+            .attr("width", "200%")
+            .attr("height", "200%");
+            
+        filter.append("feGaussianBlur")
+            .attr("stdDeviation", "3.5")
+            .attr("result", "coloredBlur");
+            
+        const feMerge = filter.append("feMerge");
+        feMerge.append("feMergeNode")
+            .attr("in", "coloredBlur");
+        feMerge.append("feMergeNode")
+            .attr("in", "SourceGraphic");
+            
+        // Create tooltip
+        const tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+            
+        // Create simulation
+        const simulation = d3.forceSimulation(allNodes)
+            .force("link", d3.forceLink(connections).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collide", d3.forceCollide().radius(40));
+            
+        // Create links
+        const link = zoomLayer.append("g")
+            .attr("class", "links")
+            .selectAll("line")
+            .data(connections)
+            .enter()
+            .append("line")
+            .attr("stroke", d => d.type === 'brand' ? "rgba(150, 150, 150, 0.6)" : "rgba(150, 180, 255, 0.4)")
+            .attr("stroke-width", d => d.value)
+            .attr("stroke-dasharray", d => d.type === 'brand' ? "5,5" : "0")
+            .attr("stroke-linecap", "round");
+            
+        // Create nodes
+        const node = zoomLayer.append("g")
+            .attr("class", "nodes")
+            .selectAll("circle")
+            .data(allNodes)
+            .enter()
+            .append("circle")
+            .attr("r", d => d.type === 'brand' ? 12 : 16)
+            .attr("fill", d => d.color)
+            .attr("stroke", "white")
+            .attr("stroke-width", 2)
+            .attr("class", d => d.type === 'brand' ? "brand-node" : "")
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended))
+            .on("click", function(event, d) {
+                showDetails(d);
+            })
+            .on("mouseover", function(event, d) {
+                // Highlight connected nodes
+                const connectedIds = new Set();
+                connections.forEach(conn => {
+                    if (conn.source.id === d.id) {
+                        connectedIds.add(conn.target.id);
+                    } else if (conn.target.id === d.id) {
+                        connectedIds.add(conn.source.id);
+                    }
+                });
+                
+                node.attr("opacity", n => 
+                    n.id === d.id || connectedIds.has(n.id) ? 1 : 0.2
+                );
+                
+                link.attr("opacity", l => 
+                    l.source.id === d.id || l.target.id === d.id ? 1 : 0.1
+                );
+                
+                d3.select(this).attr("r", d => d.type === 'brand' ? 15 : 20);
+                
+                // Show tooltip
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", 0.9);
+                tooltip.html(`
+                    <div class="tooltip-title">${d.name}</div>
+                    <div>${d.type === 'brand' ? 'Fictional Brand' : d.genre}</div>
+                    ${d.year ? `<div>Year: ${d.year}</div>` : ''}
+                    <div>Connections: ${connectedIds.size}</div>
+                `)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function(event, d) {
+                node.attr("opacity", 1);
+                link.attr("opacity", 0.4);
+                d3.select(this).attr("r", d => d.type === 'brand' ? 12 : 16);
+                
+                // Hide tooltip
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });
+            
+        // Add labels
+        const label = zoomLayer.append("g")
+            .attr("class", "labels")
+            .selectAll("text")
+            .data(allNodes)
+            .enter()
+            .append("text")
+            .attr("text-anchor", "middle")
+            .attr("dy", d => d.type === 'brand' ? -18 : -22)
+            .attr("fill", "white")
+            .attr("font-size", d => d.type === 'brand' ? "10px" : "11px")
+            .attr("font-weight", "bold")
+            .text(d => d.name)
+            .attr("opacity", 0.9);
+            
+        // Update positions on each tick
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+                
+            node
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+                
+            label
+                .attr("x", d => d.x)
+                .attr("y", d => d.y);
+        });
+        
+        // Drag functions for nodes
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+        
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+        
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+        
+        // Panning functionality
+        let isDragging = false;
+        let startX, startY;
+        let transform = { x: 0, y: 0, k: 1 };
+        
+        function startPan(event) {
+            isDragging = true;
+            startX = event.clientX - transform.x;
+            startY = event.clientY - transform.y;
+            document.getElementById('network').classList.add('dragging');
+        }
+        
+        function pan(event) {
+            if (!isDragging) return;
+            transform.x = event.clientX - startX;
+            transform.y = event.clientY - startY;
+            applyTransform();
+        }
+        
+        function endPan() {
+            isDragging = false;
+            document.getElementById('network').classList.remove('dragging');
+        }
+        
+        function applyTransform() {
+            zoomLayer.attr("transform", `translate(${transform.x},${transform.y}) scale(${transform.k})`);
+        }
+        
+        // Set up panning
+        svg.on("mousedown", startPan)
+            .on("mousemove", pan)
+            .on("mouseup", endPan)
+            .on("mouseleave", endPan);
+            
+        // Zoom functionality
+        document.getElementById('zoom-in').addEventListener('click', function() {
+            transform.k *= 1.2;
+            applyTransform();
+        });
+        
+        document.getElementById('zoom-out').addEventListener('click', function() {
+            transform.k /= 1.2;
+            applyTransform();
+        });
+        
+        document.getElementById('reset-zoom').addEventListener('click', function() {
+            transform.k = 1;
+            transform.x = 0;
+            transform.y = 0;
+            applyTransform();
+        });
+        
+        // Mouse wheel zoom
+        svg.on("wheel", function(event) {
+            event.preventDefault();
+            const zoomIntensity = 0.1;
+            const wheel = event.deltaY < 0 ? 1 : -1;
+            const zoom = Math.exp(wheel * zoomIntensity);
+            
+            transform.k *= zoom;
+            applyTransform();
+        });
+        
+        // Show details function
+        function showDetails(item) {
+            const container = document.getElementById('details-container');
+            
+            // Find connected items
+            const connectedItems = [];
+            connections.forEach(conn => {
+                if (conn.source.id === item.id) {
+                    const targetItem = allNodes.find(n => n.id === conn.target.id);
+                    if (targetItem) connectedItems.push({item: targetItem, type: conn.type});
+                } else if (conn.target.id === item.id) {
+                    const sourceItem = allNodes.find(n => n.id === conn.source.id);
+                    if (sourceItem) connectedItems.push({item: sourceItem, type: conn.type});
+                }
+            });
+            
+            // Generate HTML
+            let html = '';
+            
+            if (item.type === 'brand') {
+                html = `
+                    <div class="show-details">
+                        <div class="show-title">${item.name}</div>
+                        <div class="show-meta">
+                            <span><i class="fas fa-tag"></i> Fictional Brand</span>
+                        </div>
+                        <p>${item.description}</p>
+                        
+                        <div class="connections">
+                            <h3><i class="fas fa-link"></i> Connected Shows (${connectedItems.length})</h3>
+                `;
+            } else {
+                html = `
+                    <div class="show-details">
+                        <div class="show-title">${item.name}</div>
+                        <div class="show-meta">
+                            <span><i class="fas fa-calendar-alt"></i> ${item.year}</span>
+                            <span><i class="fas fa-tag"></i> ${item.genre}</span>
+                        </div>
+                        <p>${item.description}</p>
+                        
+                        <div class="connections">
+                            <h3><i class="fas fa-link"></i> Connected Items (${connectedItems.length})</h3>
+                `;
+            }
+            
+            connectedItems.forEach(conn => {
+                const connectionClass = conn.type === 'brand' ? 'brand-connection' : '';
+                html += `
+                    <div class="connection-item ${connectionClass}" onclick="showDetails(${JSON.stringify(conn.item).replace(/"/g, '&quot;')})">
+                        <strong>${conn.item.name}</strong>
+                        ${conn.type === 'brand' ? '<span class="connection-via">(via brand)</span>' : ''}
+                        <span class="connection-year">${conn.item.year || ''}</span>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            // Add to recent searches if it's a show
+            if (item.type !== 'brand') {
+                addToRecentSearches(item.name);
+            }
+        }
+        
+        // Recent searches functionality
+        let recentSearches = JSON.parse(localStorage.getItem('recentSearches')) || [];
+        
+        function addToRecentSearches(showName) {
+            if (!recentSearches.includes(showName)) {
+                recentSearches.unshift(showName);
+                if (recentSearches.length > 5) {
+                    recentSearches.pop();
+                }
+                localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+                updateRecentSearches();
+            }
+        }
+        
+        function updateRecentSearches() {
+            const container = document.getElementById('recent-searches');
+            container.innerHTML = '';
+            
+            recentSearches.forEach(show => {
+                const tag = document.createElement('div');
+                tag.className = 'recent-tag';
+                tag.textContent = show;
+                tag.addEventListener('click', function() {
+                    const foundShow = tvShows.find(s => s.name === show);
+                    if (foundShow) {
+                        showDetails(foundShow);
+                        highlightShow(foundShow);
+                    }
+                });
+                container.appendChild(tag);
+            });
+        }
+        
+        // Auto-complete functionality
+        function setupAutoComplete(inputElement, suggestionsElement) {
+            inputElement.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                if (!searchTerm) {
+                    suggestionsElement.style.display = 'none';
+                    return;
+                }
+                
+                const matches = allNodes.filter(node => 
+                    node.name.toLowerCase().includes(searchTerm)
+                ).slice(0, 5);
+                
+                if (matches.length > 0) {
+                    suggestionsElement.innerHTML = matches.map(node => 
+                        `<div class="suggestion-item" data-id="${node.id}">${node.name}</div>`
+                    ).join('');
+                    suggestionsElement.style.display = 'block';
+                } else {
+                    suggestionsElement.style.display = 'none';
+                }
+            });
+            
+            suggestionsElement.addEventListener('click', function(e) {
+                if (e.target.classList.contains('suggestion-item')) {
+                    const nodeId = parseInt(e.target.getAttribute('data-id'));
+                    const node = allNodes.find(n => n.id === nodeId);
+                    if (node) {
+                        inputElement.value = node.name;
+                        suggestionsElement.style.display = 'none';
+                        highlightShow(node);
+                    }
+                }
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!inputElement.contains(e.target) && !suggestionsElement.contains(e.target)) {
+                    suggestionsElement.style.display = 'none';
+                }
+            });
+        }
+        
+        function highlightShow(item) {
+            // Reset all nodes
+            node.attr("opacity", 0.3);
+            link.attr("opacity", 0.1);
+            
+            // Highlight the item node
+            node.filter(d => d.id === item.id).attr("opacity", 1).attr("r", d => d.type === 'brand' ? 15 : 20);
+            
+            // Highlight connected nodes
+            const connectedIds = new Set();
+            connections.forEach(conn => {
+                if (conn.source.id === item.id) {
+                    connectedIds.add(conn.target.id);
+                } else if (conn.target.id === item.id) {
+                    connectedIds.add(conn.source.id);
+                }
+            });
+            
+            node.filter(d => connectedIds.has(d.id)).attr("opacity", 1);
+            link.filter(d => 
+                d.source.id === item.id || d.target.id === item.id
+            ).attr("opacity", 1);
+            
+            // Show details
+            showDetails(item);
+        }
+        
+        // Button functionality
+        document.getElementById('reset-btn').addEventListener('click', function() {
+            simulation.alpha(0.3).restart();
+            node.attr("opacity", 1);
+            link.attr("opacity", 0.4);
+            document.getElementById('path-info').style.display = 'none';
+        });
+        
+        document.getElementById('show-all-btn').addEventListener('click', function() {
+            // Reset all nodes to full opacity
+            node.attr("opacity", 1);
+            link.attr("opacity", 0.4);
+            document.getElementById('path-info').style.display = 'none';
+        });
+        
+        document.getElementById('center-btn').addEventListener('click', function() {
+            const stElsewhere = tvShows.find(s => s.name === "St. Elsewhere");
+            if (stElsewhere) {
+                showDetails(stElsewhere);
+                highlightShow(stElsewhere);
+                
+                // Center on St. Elsewhere
+                simulation.force("center", d3.forceCenter(width / 2, height / 2));
+                simulation.alpha(0.3).restart();
+            }
+        });
+        
+        document.getElementById('about-btn').addEventListener('click', function() {
+            const container = document.getElementById('details-container');
+            container.innerHTML = `
+                <div class="show-details">
+                    <h2>About the Universe</h2>
+                    <p>The <span class="highlight">Tommy Westphall universe</span> is a fictional universe consisting of thousands of television series, all of which are connected through crossover episodes and shared characters.</p>
+                    <br>
+                    <p>According to the hypothesis, all these shows exist only in the imagination of <span class="highlight">Tommy Westphall</span>, an autistic child seen in the final episode of the medical drama <span class="highlight">St. Elsewhere</span>.</p>
+                    <br>
+                    <p>This visualization shows how various TV shows are interconnected through character crossovers and shared universes, including connections via fictional brands like Morley Cigarettes.</p>
+                    <br>
+                    <p>The connections are based on actual crossovers between TV shows and shared references to fictional brands, where multiple shows reference the same fictional brand, establishing that both shows exist in the same fictional universe.</p>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value">32</div>
+                        <div class="stat-label">TV Shows</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">48</div>
+                        <div class="stat-label">Connections</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1970</div>
+                        <div class="stat-label">Starting Year</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1</div>
+                        <div class="stat-label">Imaginary Universe</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        // Find shortest path between two shows
+        function findShortestPath(startId, endId) {
+            // Create a graph representation
+            const graph = {};
+            allNodes.forEach(node => {
+                graph[node.id] = [];
+            });
+            
+            connections.forEach(conn => {
+                graph[conn.source.id].push(conn.target.id);
+                graph[conn.target.id].push(conn.source.id);
+            });
+            
+            // BFS for shortest path
+            const queue = [startId];
+            const visited = {[startId]: true};
+            const prev = {[startId]: null};
+            
+            while (queue.length > 0) {
+                const current = queue.shift();
+                
+                if (current === endId) {
+                    // Reconstruct path
+                    const path = [];
+                    let node = endId;
+                    while (node !== null) {
+                        path.unshift(node);
+                        node = prev[node];
+                    }
+                    return path;
+                }
+                
+                graph[current].forEach(neighbor => {
+                    if (!visited[neighbor]) {
+                        visited[neighbor] = true;
+                        prev[neighbor] = current;
+                        queue.push(neighbor);
+                    }
+                });
+            }
+            
+            return null; // No path found
+        }
+        
+        // Highlight path between two shows
+        function highlightPath(startId, endId) {
+            const path = findShortestPath(startId, endId);
+            if (!path || path.length < 2) {
+                alert("No path found between these shows!");
+                return;
+            }
+            
+            // Reset all nodes and links
+            node.attr("opacity", 0.3);
+            link.attr("opacity", 0.1);
+            
+            // Highlight path nodes
+            path.forEach(id => {
+                node.filter(d => d.id === id).attr("opacity", 1).classed("path-node", true);
+            });
+            
+            // Highlight path links
+            for (let i = 0; i < path.length - 1; i++) {
+                const sourceId = path[i];
+                const targetId = path[i+1];
+                
+                link.filter(d => 
+                    (d.source.id === sourceId && d.target.id === targetId) ||
+                    (d.source.id === targetId && d.target.id === sourceId)
+                ).attr("opacity", 1).classed("path-line", true);
+            }
+            
+            // Show path info
+            const pathInfo = document.getElementById('path-info');
+            const pathSteps = document.getElementById('path-steps');
+            pathInfo.style.display = 'block';
+            
+            let stepsHtml = '';
+            for (let i = 0; i < path.length; i++) {
+                const item = allNodes.find(n => n.id === path[i]);
+                stepsHtml += `<div class="path-step">`;
+                
+                if (i > 0) {
+                    stepsHtml += `<span class="path-arrow">→</span>`;
+                }
+                
+                stepsHtml += `<span>${item.name}</span>`;
+                stepsHtml += `</div>`;
+            }
+            
+            pathSteps.innerHTML = stepsHtml;
+        }
+        
+        // Find path button functionality
+        document.getElementById('find-path-btn').addEventListener('click', function() {
+            const startShowName = document.getElementById('start-show').value;
+            const endShowName = document.getElementById('end-show').value;
+            
+            if (!startShowName || !endShowName) {
+                alert("Please enter both start and end shows!");
+                return;
+            }
+            
+            const startShow = allNodes.find(node => 
+                node.name.toLowerCase().includes(startShowName.toLowerCase())
+            );
+            
+            const endShow = allNodes.find(node => 
+                node.name.toLowerCase().includes(endShowName.toLowerCase())
+            );
+            
+            if (!startShow || !endShow) {
+                alert("One or both shows not found in the database!");
+                return;
+            }
+            
+            highlightPath(startShow.id, endShow.id);
+            showDetails(startShow);
+            
+            // Add to recent searches if they are shows
+            if (startShow.type !== 'brand') {
+                addToRecentSearches(startShow.name);
+            }
+            if (endShow.type !== 'brand') {
+                addToRecentSearches(endShow.name);
+            }
+        });
+        
+        // Initialize
+        setTimeout(() => {
+            const stElsewhere = tvShows.find(s => s.name === "St. Elsewhere");
+            if (stElsewhere) showDetails(stElsewhere);
+            
+            // Setup auto-complete
+            setupAutoComplete(
+                document.getElementById('start-show'),
+                document.getElementById('start-suggestions')
+            );
+            
+            setupAutoComplete(
+                document.getElementById('end-show'),
+                document.getElementById('end-suggestions')
+            );
+            
+            // Update recent searches
+            updateRecentSearches();
+        }, 500);
+    </script>
+</body>
+</html>
